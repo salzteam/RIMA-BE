@@ -43,6 +43,7 @@ module.exports = {
         allowedKeys.includes(key)
       );
       const newBody = {};
+      let isEmail = null;
       for (let key of sanitizedKey) {
         if (key == "email" && typeof key == "string") {
           let atps = body[key].indexOf("@");
@@ -52,6 +53,13 @@ module.exports = {
               .status(400)
               .json({ msg: "Error Input Data Email!", data: null });
           }
+        }
+        if (key == "emailOrusername" && typeof key == "string") {
+          let atps = body[key].indexOf("@");
+          let dots = body[key].lastIndexOf(".");
+          isEmail = true;
+          if (atps < 1 || dots < atps + 2 || dots + 2 >= body[key].length)
+            isEmail = false;
         }
         if (key == "phone") {
           let regexPhone =
@@ -77,6 +85,8 @@ module.exports = {
           }
         }
         Object.assign(newBody, { [key]: body[key] });
+        if (isEmail !== null)
+          Object.assign(newBody, { [key]: body[key], isEmail: isEmail });
       }
       req.body = newBody;
       next();
