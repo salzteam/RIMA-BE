@@ -8,7 +8,7 @@ const {
 } = require("../middlewares/upload");
 const profileUploader = require("../middlewares/profileUpload");
 
-const { editProfile, getProfile } = require("../controller/profile");
+const { editProfile, getProfile, editPwd } = require("../controller/profile");
 
 profileRouter.patch(
   "/edit",
@@ -21,6 +21,12 @@ profileRouter.patch(
   profileUploader,
   validate.img(),
   editProfile
+);
+profileRouter.patch(
+  "/change-password",
+  isLogin(),
+  validate.body("password", "new_password"),
+  editPwd
 );
 profileRouter.get("/:id", isLogin(), getProfile);
 module.exports = profileRouter;
