@@ -9,8 +9,14 @@ const editProfile = async (req, res) => {
   res.status(result.statusCode).send(result);
 };
 
+const getProfile = async (req, res) => {
+  const result = await profileRepo.getProfile(req.userPayload);
+  res.status(result.statusCode).send(result);
+};
+
 const profileControllers = {
   editProfile,
+  getProfile,
 };
 
 module.exports = profileControllers;

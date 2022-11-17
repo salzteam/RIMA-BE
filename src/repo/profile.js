@@ -70,9 +70,27 @@ const editPorfile = (body, token, file) => {
     });
   });
 };
-
+const getProfile = (token) => {
+  return new Promise((resolve, reject) => {
+    const query = "select * from users where id = $1";
+    const query2 = "select * from userinfo where user_id = $1";
+    db.query(query, [token.user_id], (err, users) => {
+      db.query(query2, [token.user_id], (err, profiles) => {
+        if (err) {
+          resolve(systemError());
+        }
+        const results = {
+          profileData: users.rows,
+          profileUser: profiles.rows,
+        };
+        resolve(success(results));
+      });
+    });
+  });
+};
 const profileRepo = {
   editPorfile,
+  getProfile,
 };
 
 module.exports = profileRepo;
