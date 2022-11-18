@@ -103,7 +103,6 @@ const createProducts = (body, file, user) => {
     });
   });
 };
-
 const getProducts = (queryParams, hostApi) => {
   return new Promise((resolve, reject) => {
     let link = `${hostApi}/api/v1/product?`;
@@ -208,16 +207,6 @@ const getProducts = (queryParams, hostApi) => {
     ) {
       query += ` where lower(p."name") like lower('%${queryParams.search}%') and lower(c2."name") like lower('%${queryParams.category}%')`;
       link += `search=${queryParams.search}&category=${queryParams.category}`;
-    }
-    if (
-      queryParams.search &&
-      queryParams.category &&
-      queryParams.brand &&
-      queryParams.color &&
-      queryParams.size
-    ) {
-      query += ` where lower(p."name") like lower('%${queryParams.search}%') and lower(c2."name") like lower('%${queryParams.category}%') and lower(b."name") like lower('%${queryParams.brand}%') and lower(c.color) like lower('%${queryParams.color}%') and lower(s."name") like lower('%${queryParams.size}%')`;
-      link += `search=${queryParams.search}&category=${queryParams.category}&brand=${queryParams.brand}&color=${queryParams.color}&size=${queryParams.size}&`;
     }
     if (
       queryParams.search &&
