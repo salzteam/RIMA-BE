@@ -6,7 +6,7 @@ const create = async (req, res) => {
   res.status(result.statusCode).send(result);
 };
 const getProducts = async (req, res) => {
-  const hostApi = `${req.protocol}://${req.hostname}:8080`;
+  const hostApi = `${req.protocol}://${req.hostname}`;
   const result = await productsRepo.getProducts(req.query, hostApi);
   res.status(result.statusCode).send(result);
 };
