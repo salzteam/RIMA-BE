@@ -164,6 +164,16 @@ const getProducts = (queryParams, hostApi) => {
       link += `search=${queryParams.search}&category=${queryParams.category}&color=${queryParams.color}&size=${queryParams.size}&`;
     }
     if (
+      !queryParams.search &&
+      queryParams.category &&
+      !queryParams.brand &&
+      !queryParams.color &&
+      !queryParams.size
+    ) {
+      query += ` where lower(c2."name") like lower('%${queryParams.category}%')`;
+      link += `category=${queryParams.category}`;
+    }
+    if (
       queryParams.search &&
       queryParams.category &&
       !queryParams.brand &&
@@ -395,16 +405,16 @@ const getProducts = (queryParams, hostApi) => {
       query += ` where p.price between ${queryParams.startPrice} and ${queryParams.toPrice}`;
       link += `startPrice=${queryParams.startPrice}&toPrice=${queryParams.toPrice}&`;
     }
-    if (
-      queryParams.search ||
-      queryParams.category ||
-      queryParams.brand ||
-      queryParams.color ||
-      queryParams.size ||
-      (queryParams.startPrice && queryParams.toPrice)
-    ) {
-      query += ` and p.price between ${queryParams.startPrice} and ${queryParams.toPrice}`;
-      link += `startPrice=${queryParams.startPrice}&toPrice=${queryParams.toPrice}&`;
+    if (queryParams.startPrice && queryParams.search) {
+      if (
+        queryParams.category ||
+        queryParams.brand ||
+        queryParams.color ||
+        queryParams.size
+      ) {
+        query += ` and p.price between ${queryParams.startPrice} and ${queryParams.toPrice}`;
+        link += `startPrice=${queryParams.startPrice}&toPrice=${queryParams.toPrice}&`;
+      }
     }
     if (queryParams.price == "expensive") {
       query += ` order by p.price desc`;
@@ -430,6 +440,7 @@ const getProducts = (queryParams, hostApi) => {
       query += ` limit $1 offset $2`;
       values.push(limit, offset);
     }
+    console.log(query);
     db.query(
       `select p.id, p."name" ,p.price, p.description, s."name" as size, c.color, i.image, s2.stock, c2."name" as category, b."name" as brand from product_size_color_image psci left join product p on psci.product_id = p.id join size s on psci.size_id = s.id join color c on psci.color_id = c.id join image i on psci.image_id = i.product_id join stock s2 on psci.stock_id = s2.product_id join category c2 on psci.category_id = c2.id join brand b on psci.brand_id = b.id`,
       (err, getData) => {
