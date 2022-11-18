@@ -10,7 +10,6 @@ const db = require("../config/database");
 
 const createProducts = (body, file, user_id) => {
   return new Promise((resolve, reject) => {
-    // console.log(file);
     db.connect((err, client, done) => {
       const shouldAbort = (err) => {
         if (err) {
@@ -24,7 +23,7 @@ const createProducts = (body, file, user_id) => {
             done();
           });
         }
-        return !err;
+        return !!err;
       };
       client.query("BEGIN", (err) => {
         if (shouldAbort(err)) return;
@@ -39,15 +38,13 @@ const createProducts = (body, file, user_id) => {
           desc,
         } = body;
         if (shouldAbort(err)) return;
-        console.log(desc);
         const queryText =
           "insert into product (name, price, description, users_id) values ($1,$2,$3,$4) RETURNING id";
-        console.log(queryText);
         client.query(queryText, [name, price, desc, user_id], (err, res) => {
           if (shouldAbort(err)) return;
           const productID = res.rows[0].id;
           let inputImage =
-            "insert into image (product_id, image,) values ($1,$2)";
+            "insert into image (product_id, image) values ($1,$2)";
           client.query(inputImage, [productID, file], (err, resImage) => {
             if (shouldAbort(err)) return;
             let inputStock = "insert into stock(product_id,stock)values($1,$2)";
@@ -75,7 +72,8 @@ const createProducts = (body, file, user_id) => {
                     }
                     const data = {
                       id: productID,
-                      name: name,
+                      name_store: user_id,
+                      name_product: name,
                       price: price,
                       description: desc,
                       category: category_id,
