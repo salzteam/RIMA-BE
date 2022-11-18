@@ -5,7 +5,7 @@ const create = async (req, res) => {
   const result = await productsRepo.createProducts(
     req.body,
     req.file,
-    req.userPayload.user_id
+    req.userPayload
   );
   res.status(result.statusCode).send(result);
 };

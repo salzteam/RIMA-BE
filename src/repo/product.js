@@ -8,7 +8,7 @@ const {
 } = require("../helpers/templateResponse");
 const db = require("../config/database");
 
-const createProducts = (body, file, user_id) => {
+const createProducts = (body, file, user) => {
   return new Promise((resolve, reject) => {
     db.connect((err, client, done) => {
       const shouldAbort = (err) => {
@@ -40,57 +40,65 @@ const createProducts = (body, file, user_id) => {
         if (shouldAbort(err)) return;
         const queryText =
           "insert into product (name, price, description, users_id) values ($1,$2,$3,$4) RETURNING id";
-        client.query(queryText, [name, price, desc, user_id], (err, res) => {
-          if (shouldAbort(err)) return;
-          const productID = res.rows[0].id;
-          let inputImage =
-            "insert into image (product_id, image) values ($1,$2)";
-          client.query(inputImage, [productID, file], (err, resImage) => {
+        client.query(
+          queryText,
+          [name, price, desc, user.user_id],
+          (err, res) => {
             if (shouldAbort(err)) return;
-            let inputStock = "insert into stock(product_id,stock)values($1,$2)";
-            client.query(inputStock, [productID, stock], (err, resStock) => {
+            const productID = res.rows[0].id;
+            let inputImage =
+              "insert into image (product_id, image) values ($1,$2)";
+            client.query(inputImage, [productID, file], (err, resImage) => {
               if (shouldAbort(err)) return;
-              const insertPivot =
-                "insert into product_size_color_image (product_id, size_id, color_id, image_id, stock_id, category_id, brand_id) values ($1,$2,$3,$4,$5,$6,$7)";
-              client.query(
-                insertPivot,
-                [
-                  productID,
-                  size_id,
-                  color_id,
-                  productID,
-                  productID,
-                  category_id,
-                  brand_id,
-                ],
-                (err, resPivot) => {
-                  if (shouldAbort(err)) return;
-                  client.query("COMMIT", (err) => {
-                    if (err) {
-                      console.error("Error committing transaction", err.stack);
-                      resolve(systemError());
-                    }
-                    const data = {
-                      id: productID,
-                      name_store: user_id,
-                      name_product: name,
-                      price: price,
-                      description: desc,
-                      category: category_id,
-                      brand: brand_id,
-                      stock: stock,
-                      size: size_id,
-                      color: color_id,
-                      image: file,
-                    };
-                    resolve(created(data));
-                    done();
-                  });
-                }
-              );
+              let inputStock =
+                "insert into stock(product_id,stock)values($1,$2)";
+              client.query(inputStock, [productID, stock], (err, resStock) => {
+                if (shouldAbort(err)) return;
+                const insertPivot =
+                  "insert into product_size_color_image (product_id, size_id, color_id, image_id, stock_id, category_id, brand_id) values ($1,$2,$3,$4,$5,$6,$7)";
+                client.query(
+                  insertPivot,
+                  [
+                    productID,
+                    size_id,
+                    color_id,
+                    productID,
+                    productID,
+                    category_id,
+                    brand_id,
+                  ],
+                  (err, resPivot) => {
+                    if (shouldAbort(err)) return;
+                    client.query("COMMIT", (err) => {
+                      if (err) {
+                        console.error(
+                          "Error committing transaction",
+                          err.stack
+                        );
+                        resolve(systemError());
+                      }
+                      const data = {
+                        id: productID,
+                        name_store: user.emailOrusername,
+                        name_product: name,
+                        price: price,
+                        description: desc,
+                        category: category_id,
+                        brand: brand_id,
+                        stock: stock,
+                        size: size_id,
+                        color: color_id,
+                        image: file,
+                      };
+                      resolve(created(data));
+                      done();
+                    });
+                  }
+                );
+              });
             });
-          });
-        });
+          }
+        );
       });
     });
   });
