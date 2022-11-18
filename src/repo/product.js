@@ -103,6 +103,7 @@ const createProducts = (body, file, user) => {
     });
   });
 };
+
 const getProducts = (queryParams, hostApi) => {
   return new Promise((resolve, reject) => {
     let link = `${hostApi}/api/v1/product?`;

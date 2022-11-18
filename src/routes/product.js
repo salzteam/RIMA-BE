@@ -13,7 +13,7 @@ const productUpload = require("../middlewares/productUpload");
 productsRouter.post(
   "/create",
   isLogin(),
-  // isAllowed()
+  isAllowed("seller"),
   validate.body(
     "name",
     "price",
