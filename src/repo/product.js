@@ -102,26 +102,12 @@ const getProducts = (queryParams, hostApi) => {
   return new Promise((resolve, reject) => {
     let link = `${hostApi}/api/v1/products?`;
     let query = `select p.id, p."name" ,p.price, p.description, s."name" as size, c.color, i.image, s2.stock, c2."name" as category, b."name" as brand from product_size_color_image psci left join product p on psci.product_id = p.id join size s on psci.size_id = s.id join color c on psci.color_id = c.id join image i on psci.image_id = i.product_id join stock s2 on psci.stock_id = s2.product_id join category c2 on psci.category_id = c2.id join brand b on psci.brand_id = b.id`;
-    if (queryParams.sortby == "latest") {
-      query += ` order by p.created_at asc`;
-      link += `sortby=${queryParams.sortby}&`;
-    }
-    if (queryParams.price == "expensive") {
-      query += ` order by p.price desc`;
-      link += `price=${queryParams.price}&`;
-    }
-    if (queryParams.price == "cheap") {
-      query += ` order by p.price asc`;
-      link += `price=${queryParams.price}&`;
-    }
     if (
       queryParams.search &&
       !queryParams.category &&
       !queryParams.brand &&
       !queryParams.color &&
-      !queryParams.size &&
-      !queryParams.startPrice &&
-      !queryParams.toPrice
+      !queryParams.size
     ) {
       query += ` where lower(p."name") like lower('%${queryParams.search}%')`;
       link += `search=${queryParams.search}&`;
@@ -397,22 +383,45 @@ const getProducts = (queryParams, hostApi) => {
       query += ` where lower(s."name") like lower('%${queryParams.size}%')`;
       link += `size=${queryParams.size}&`;
     }
-    if (queryParams.startPrice && queryParams.toPrice) {
+    if (
+      queryParams.startPrice &&
+      queryParams.toPrice &&
+      !queryParams.search &&
+      !queryParams.category &&
+      !queryParams.brand &&
+      !queryParams.color &&
+      !queryParams.size
+    ) {
       query += ` where p.price between ${queryParams.startPrice} and ${queryParams.toPrice}`;
       link += `startPrice=${queryParams.startPrice}&toPrice=${queryParams.toPrice}&`;
-      if (
-        queryParams.search ||
-        queryParams.category ||
-        queryParams.brand ||
-        queryParams.color ||
-        queryParams.size
-      ) {
-        console.log("first");
-        query += ` and p.price between ${queryParams.startPrice} and ${queryParams.toPrice}`;
-        link += `startPrice=${queryParams.startPrice}&toPrice=${queryParams.toPrice}&`;
-      }
     }
-    console.log(query);
+    if (
+      queryParams.search ||
+      queryParams.category ||
+      queryParams.brand ||
+      queryParams.color ||
+      queryParams.size ||
+      (queryParams.startPrice && queryParams.toPrice)
+    ) {
+      query += ` and p.price between ${queryParams.startPrice} and ${queryParams.toPrice}`;
+      link += `startPrice=${queryParams.startPrice}&toPrice=${queryParams.toPrice}&`;
+    }
+    if (queryParams.price == "expensive") {
+      query += ` order by p.price desc`;
+      link += `price=${queryParams.price}&`;
+    }
+    if (queryParams.price == "cheap") {
+      query += ` order by p.price asc`;
+      link += `price=${queryParams.price}&`;
+    }
+    if (queryParams.sortby == "latest" && !queryParams.price) {
+      query += ` order by p.created_at asc`;
+      link += `sortby=${queryParams.sortby}&`;
+    }
+    if (queryParams.sortby == "latest" && queryParams.price) {
+      query += ` , p.created_at asc`;
+      link += `sortby=${queryParams.sortby}&`;
+    }
     db.query(query, (err, res) => {
       if (err) {
         console.log(err);
