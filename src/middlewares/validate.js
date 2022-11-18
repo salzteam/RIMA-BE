@@ -30,8 +30,19 @@ module.exports = {
   img: () => {
     return (req, res, next) => {
       let { file } = req;
+      console.log(file);
       if (!file) {
         file = null;
+      }
+      next();
+    };
+  },
+  imgs: () => {
+    return (req, res, next) => {
+      let { files } = req;
+      // console.log(files);
+      if (!files) {
+        files = null;
       }
       next();
     };

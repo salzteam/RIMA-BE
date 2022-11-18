@@ -48,6 +48,9 @@ const errorHandler = (err, res, next) => {
     return res.status(500).json({ status: "Upload Error", msg: err.message });
   }
   if (err) {
+    if (err.code === "LIMIT_UNEXPECTED_FILE") {
+      return res.status(500).json("Too many files to upload. 5pict only");
+    }
     return res
       .status(500)
       .json({ status: "Internal Server Error", msg: err.message });
