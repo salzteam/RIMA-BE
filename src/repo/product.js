@@ -8,7 +8,7 @@ const {
 } = require("../helpers/templateResponse");
 const db = require("../config/database");
 
-const createProducts = (body, file) => {
+const createProducts = (body, file, user_id) => {
   return new Promise((resolve, reject) => {
     // console.log(file);
     db.connect((err, client, done) => {
@@ -41,13 +41,13 @@ const createProducts = (body, file) => {
         if (shouldAbort(err)) return;
         console.log(desc);
         const queryText =
-          "insert into product (name, price, description) values ($1,$2,$3) RETURNING id";
+          "insert into product (name, price, description, users_id) values ($1,$2,$3,$4) RETURNING id";
         console.log(queryText);
-        client.query(queryText, [name, price, desc], (err, res) => {
+        client.query(queryText, [name, price, desc, user_id], (err, res) => {
           if (shouldAbort(err)) return;
           const productID = res.rows[0].id;
           let inputImage =
-            "insert into image (product_id, image) values ($1,$2)";
+            "insert into image (product_id, image,) values ($1,$2)";
           client.query(inputImage, [productID, file], (err, resImage) => {
             if (shouldAbort(err)) return;
             let inputStock = "insert into stock(product_id,stock)values($1,$2)";

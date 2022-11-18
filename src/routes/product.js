@@ -1,7 +1,7 @@
 const productsRouter = require("express").Router();
 const validate = require("../middlewares/validate");
 const isLogin = require("../middlewares/isLogin");
-// const isAllowed = require("../middlewares/allowedRole");
+const isAllowed = require("../middlewares/allowedRole");
 const { create, getProducts } = require("../controller/product");
 const {
   diskUpload,

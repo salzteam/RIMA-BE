@@ -24,9 +24,8 @@ const uploader = async (req, res, next) => {
           cloudinaryOpt
         );
         req.file.push(rest.url);
-        console.log(`index : ${index + 1} length: ${files.length}`);
-        console.log("selesai");
         count += 1;
+        console.log(count);
         if (count === files.length) next();
       } catch (err) {
         console.log(err);

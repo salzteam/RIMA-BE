@@ -2,7 +2,11 @@ const productsRepo = require("../repo/product");
 const client = require("../config/redis");
 
 const create = async (req, res) => {
-  const result = await productsRepo.createProducts(req.body, req.file);
+  const result = await productsRepo.createProducts(
+    req.body,
+    req.file,
+    req.payload
+  );
   res.status(result.statusCode).send(result);
 };
 const getProducts = async (req, res) => {
