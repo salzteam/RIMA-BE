@@ -100,7 +100,7 @@ const createProducts = (body, file) => {
 
 const getProducts = (queryParams, hostApi) => {
   return new Promise((resolve, reject) => {
-    let link = `${hostApi}/api/v1/products?`;
+    let link = `${hostApi}/api/v1/product?`;
     let query = `select p.id, p."name" ,p.price, p.description, s."name" as size, c.color, i.image, s2.stock, c2."name" as category, b."name" as brand from product_size_color_image psci left join product p on psci.product_id = p.id join size s on psci.size_id = s.id join color c on psci.color_id = c.id join image i on psci.image_id = i.product_id join stock s2 on psci.stock_id = s2.product_id join category c2 on psci.category_id = c2.id join brand b on psci.brand_id = b.id`;
     if (
       queryParams.search &&
@@ -422,13 +422,63 @@ const getProducts = (queryParams, hostApi) => {
       query += ` , p.created_at asc`;
       link += `sortby=${queryParams.sortby}&`;
     }
-    db.query(query, (err, res) => {
-      if (err) {
-        console.log(err);
-        resolve(systemError());
+    let values = [];
+    if (queryParams.page && queryParams.limit) {
+      let page = parseInt(queryParams.page);
+      let limit = parseInt(queryParams.limit);
+      let offset = (page - 1) * limit;
+      query += ` limit $1 offset $2`;
+      values.push(limit, offset);
+    }
+    db.query(
+      `select p.id, p."name" ,p.price, p.description, s."name" as size, c.color, i.image, s2.stock, c2."name" as category, b."name" as brand from product_size_color_image psci left join product p on psci.product_id = p.id join size s on psci.size_id = s.id join color c on psci.color_id = c.id join image i on psci.image_id = i.product_id join stock s2 on psci.stock_id = s2.product_id join category c2 on psci.category_id = c2.id join brand b on psci.brand_id = b.id`,
+      (err, getData) => {
+        db.query(query, values, (err, res) => {
+          if (err) {
+            console.log(err.message);
+            resolve(systemError());
+          }
+          if (res.rows.length === 0) return resolve(notFound());
+          let resNext = null;
+          let resPrev = null;
+          if (queryParams.page && queryParams.limit) {
+            let page = parseInt(queryParams.page);
+            let limit = parseInt(queryParams.limit);
+            let start = (page - 1) * limit;
+            let end = page * limit;
+            let dataNext = Math.ceil(getData.rowCount / limit);
+            if (start <= getData.rowCount) {
+              next = page + 1;
+            }
+            if (end > 0) {
+              prev = page - 1;
+            }
+            if (parseInt(next) <= parseInt(dataNext)) {
+              resNext = `${link}page=${next}&limit=${limit}`;
+            }
+            if (parseInt(prev) !== 0) {
+              resPrev = `${link}page=${prev}&limit=${limit}`;
+            }
+            let sendResponse = {
+              dataCount: getData.rows.length,
+              next: resNext,
+              prev: resPrev,
+              totalPage: dataNext,
+              data: res.rows,
+            };
+            return resolve(success(sendResponse));
+          }
+          let sendResponse = {
+            dataCount: getData.rows.length,
+            next: resNext,
+            prev: resPrev,
+            totalPage: null,
+            data: res.rows,
+          };
+          resolve(success(sendResponse));
+        });
       }
-      resolve(success(res.rows));
-    });
+    );
   });
 };
 
