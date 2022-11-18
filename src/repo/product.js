@@ -24,7 +24,7 @@ const createProducts = (body, file) => {
             done();
           });
         }
-        return !!err;
+        return !err;
       };
       client.query("BEGIN", (err) => {
         if (shouldAbort(err)) return;
@@ -46,7 +46,6 @@ const createProducts = (body, file) => {
         client.query(queryText, [name, price, desc], (err, res) => {
           if (shouldAbort(err)) return;
           const productID = res.rows[0].id;
-          console.log({ file });
           let inputImage =
             "insert into image (product_id, image) values ($1,$2)";
           client.query(inputImage, [productID, file], (err, resImage) => {
@@ -102,20 +101,7 @@ const createProducts = (body, file) => {
 const getProducts = (queryParams, hostApi) => {
   return new Promise((resolve, reject) => {
     let link = `${hostApi}/api/v1/products?`;
-    console.log(queryParams);
     let query = `select p.id, p."name" ,p.price, p.description, s."name" as size, c.color, i.image, s2.stock, c2."name" as category, b."name" as brand from product_size_color_image psci left join product p on psci.product_id = p.id join size s on psci.size_id = s.id join color c on psci.color_id = c.id join image i on psci.image_id = i.product_id join stock s2 on psci.stock_id = s2.product_id join category c2 on psci.category_id = c2.id join brand b on psci.brand_id = b.id`;
-    if (queryParams.search && !queryParams.category && !queryParams.brand) {
-      query += ` where lower(p."name") like lower('%${queryParams.search}%')`;
-      link += `search=${queryParams.search}&`;
-    }
-    if (queryParams.category && queryParams.search) {
-      query += ` where lower(p."name") like lower('%${queryParams.search}%') and lower(c2."name") like lower('${queryParams.category}')`;
-      link += `category=${queryParams.category}&`;
-    }
-    if (queryParams.category && !queryParams.search) {
-      query += ` where lower(c2."name") like lower ('${queryParams.category}')`;
-      link += `category=${queryParams.category}&`;
-    }
     if (queryParams.sortby == "latest") {
       query += ` order by p.created_at asc`;
       link += `sortby=${queryParams.sortby}&`;
@@ -127,6 +113,304 @@ const getProducts = (queryParams, hostApi) => {
     if (queryParams.price == "cheap") {
       query += ` order by p.price asc`;
       link += `price=${queryParams.price}&`;
+    }
+    if (
+      queryParams.search &&
+      !queryParams.category &&
+      !queryParams.brand &&
+      !queryParams.color &&
+      !queryParams.size &&
+      !queryParams.startPrice &&
+      !queryParams.toPrice
+    ) {
+      query += ` where lower(p."name") like lower('%${queryParams.search}%')`;
+      link += `search=${queryParams.search}&`;
+    }
+    if (
+      queryParams.search &&
+      queryParams.category &&
+      queryParams.brand &&
+      queryParams.color &&
+      queryParams.size
+    ) {
+      query += ` where lower(p."name") like lower('%${queryParams.search}%') and lower(c2."name") like lower('%${queryParams.category}%') and lower(b."name") like lower('%${queryParams.brand}%') and lower(c.color) like lower('%${queryParams.color}%') and lower(s."name") like lower('%${queryParams.size}%')`;
+      link += `search=${queryParams.search}&category=${queryParams.category}&brand=${queryParams.brand}&color=${queryParams.color}&size=${queryParams.size}&`;
+    }
+    if (
+      queryParams.search &&
+      queryParams.category &&
+      queryParams.brand &&
+      queryParams.color &&
+      !queryParams.size
+    ) {
+      query += ` where lower(p."name") like lower('%${queryParams.search}%') and lower(c2."name") like lower('%${queryParams.category}%') and lower(b."name") like lower('%${queryParams.brand}%') and lower(c.color) like lower('%${queryParams.color}%')`;
+      link += `search=${queryParams.search}&category=${queryParams.category}&brand=${queryParams.brand}&color=${queryParams.color}&`;
+    }
+
+    if (
+      queryParams.search &&
+      queryParams.category &&
+      queryParams.brand &&
+      !queryParams.color &&
+      queryParams.size
+    ) {
+      query += ` where lower(p."name") like lower('%${queryParams.search}%') and lower(c2."name") like lower('%${queryParams.category}%') and lower(b."name") like lower('%${queryParams.brand}%') and lower(s."name") like lower('%${queryParams.size}%')`;
+      link += `search=${queryParams.search}&category=${queryParams.category}&brand=${queryParams.brand}&size=${queryParams.size}&`;
+    }
+    if (
+      queryParams.search &&
+      queryParams.category &&
+      queryParams.brand &&
+      !queryParams.color &&
+      !queryParams.size
+    ) {
+      query += ` where lower(p."name") like lower('%${queryParams.search}%') and lower(c2."name") like lower('%${queryParams.category}%') and lower(b."name") like lower('%${queryParams.brand}%')`;
+      link += `search=${queryParams.search}&category=${queryParams.category}&brand=${queryParams.brand}&`;
+    }
+    if (
+      queryParams.search &&
+      queryParams.category &&
+      !queryParams.brand &&
+      queryParams.color &&
+      queryParams.size
+    ) {
+      query += ` where lower(p."name") like lower('%${queryParams.search}%') and lower(c2."name") like lower('%${queryParams.category}%') and lower(c.color) like lower('%${queryParams.color}%') and lower(s."name") like lower('%${queryParams.size}%')`;
+      link += `search=${queryParams.search}&category=${queryParams.category}&color=${queryParams.color}&size=${queryParams.size}&`;
+    }
+    if (
+      queryParams.search &&
+      queryParams.category &&
+      !queryParams.brand &&
+      !queryParams.color &&
+      queryParams.size
+    ) {
+      query += ` where lower(p."name") like lower('%${queryParams.search}%') and lower(c2."name") like lower('%${queryParams.category}%') and lower(s."name") like lower('%${queryParams.size}%')`;
+      link += `search=${queryParams.search}&category=${queryParams.category}&size=${queryParams.size}&`;
+    }
+    if (
+      queryParams.search &&
+      queryParams.category &&
+      !queryParams.brand &&
+      queryParams.color &&
+      !queryParams.size
+    ) {
+      query += ` where lower(p."name") like lower('%${queryParams.search}%') and lower(c2."name") like lower('%${queryParams.category}%') and lower(c.color) like lower('%${queryParams.color}%')`;
+      link += `search=${queryParams.search}&category=${queryParams.category}&color=${queryParams.color}&`;
+    }
+    if (
+      queryParams.search &&
+      queryParams.category &&
+      !queryParams.brand &&
+      !queryParams.color &&
+      !queryParams.size
+    ) {
+      query += ` where lower(p."name") like lower('%${queryParams.search}%') and lower(c2."name") like lower('%${queryParams.category}%')`;
+      link += `search=${queryParams.search}&category=${queryParams.category}`;
+    }
+    if (
+      queryParams.search &&
+      queryParams.category &&
+      queryParams.brand &&
+      queryParams.color &&
+      queryParams.size
+    ) {
+      query += ` where lower(p."name") like lower('%${queryParams.search}%') and lower(c2."name") like lower('%${queryParams.category}%') and lower(b."name") like lower('%${queryParams.brand}%') and lower(c.color) like lower('%${queryParams.color}%') and lower(s."name") like lower('%${queryParams.size}%')`;
+      link += `search=${queryParams.search}&category=${queryParams.category}&brand=${queryParams.brand}&color=${queryParams.color}&size=${queryParams.size}&`;
+    }
+    if (
+      queryParams.search &&
+      !queryParams.category &&
+      queryParams.brand &&
+      queryParams.color &&
+      queryParams.size
+    ) {
+      query += ` where lower(p."name") like lower('%${queryParams.search}%') and lower(b."name") like lower('%${queryParams.brand}%') and lower(c.color) like lower('%${queryParams.color}%') and lower(s."name") like lower('%${queryParams.size}%')`;
+      link += `search=${queryParams.search}&brand=${queryParams.brand}&color=${queryParams.color}&size=${queryParams.size}&`;
+    }
+    if (
+      queryParams.search &&
+      !queryParams.category &&
+      queryParams.brand &&
+      !queryParams.color &&
+      !queryParams.size
+    ) {
+      query += ` where lower(p."name") like lower('%${queryParams.search}%') and lower(b."name") like lower('%${queryParams.brand}%')`;
+      link += `search=${queryParams.search}&brand=${queryParams.brand}&`;
+    }
+    if (
+      queryParams.search &&
+      !queryParams.category &&
+      queryParams.brand &&
+      queryParams.color &&
+      !queryParams.size
+    ) {
+      query += ` where lower(p."name") like lower('%${queryParams.search}%') and lower(b."name") like lower('%${queryParams.brand}%') and lower(c.color) like lower('%${queryParams.color}%')`;
+      link += `search=${queryParams.search}&brand=${queryParams.brand}&color=${queryParams.color}&`;
+    }
+    if (
+      queryParams.search &&
+      !queryParams.category &&
+      queryParams.brand &&
+      !queryParams.color &&
+      queryParams.size
+    ) {
+      query += ` where lower(p."name") like lower('%${queryParams.search}%') and lower(b."name") like lower('%${queryParams.brand}%') and lower(s."name") like lower('%${queryParams.size}%')`;
+      link += `search=${queryParams.search}&brand=${queryParams.brand}&size=${queryParams.size}&`;
+    }
+    if (
+      queryParams.search &&
+      !queryParams.category &&
+      !queryParams.brand &&
+      queryParams.color &&
+      queryParams.size
+    ) {
+      query += ` where lower(p."name") like lower('%${queryParams.search}%') and lower(c.color) like lower('%${queryParams.color}%') and lower(s."name") like lower('%${queryParams.size}%')`;
+      link += `search=${queryParams.search}&color=${queryParams.color}&size=${queryParams.size}&`;
+    }
+    if (
+      queryParams.search &&
+      !queryParams.category &&
+      !queryParams.brand &&
+      queryParams.color &&
+      !queryParams.size
+    ) {
+      query += ` where lower(p."name") like lower('%${queryParams.search}%') and lower(c.color) like lower('%${queryParams.color}%')`;
+      link += `search=${queryParams.search}&color=${queryParams.color}&`;
+    }
+    if (
+      queryParams.search &&
+      !queryParams.category &&
+      !queryParams.brand &&
+      !queryParams.color &&
+      queryParams.size
+    ) {
+      query += ` where lower(p."name") like lower('%${queryParams.search}%') and lower(s."name") like lower('%${queryParams.size}%')`;
+      link += `search=${queryParams.search}&size=${queryParams.size}&`;
+    }
+    if (
+      !queryParams.search &&
+      queryParams.category &&
+      queryParams.brand &&
+      queryParams.color &&
+      queryParams.size
+    ) {
+      query += ` where lower(c2."name") like lower('%${queryParams.category}%') and lower(b."name") like lower('%${queryParams.brand}%') and lower(c.color) like lower('%${queryParams.color}%') and lower(s."name") like lower('%${queryParams.size}%')`;
+      link += `category=${queryParams.category}&brand=${queryParams.brand}&color=${queryParams.color}&size=${queryParams.size}&`;
+    }
+    if (
+      !queryParams.search &&
+      queryParams.category &&
+      !queryParams.brand &&
+      queryParams.color &&
+      queryParams.size
+    ) {
+      query += ` where lower(c2."name") like lower('%${queryParams.category}%') and lower(c.color) like lower('%${queryParams.color}%') and lower(s."name") like lower('%${queryParams.size}%')`;
+      link += `category=${queryParams.category}&color=${queryParams.color}&size=${queryParams.size}&`;
+    }
+    if (
+      !queryParams.search &&
+      queryParams.category &&
+      !queryParams.brand &&
+      queryParams.color &&
+      !queryParams.size
+    ) {
+      query += ` where lower(c2."name") like lower('%${queryParams.category}%') and lower(c.color) like lower('%${queryParams.color}%')`;
+      link += `category=${queryParams.category}&color=${queryParams.color}&`;
+    }
+    if (
+      !queryParams.search &&
+      queryParams.category &&
+      !queryParams.brand &&
+      !queryParams.color &&
+      queryParams.size
+    ) {
+      query += ` where lower(c2."name") like lower('%${queryParams.category}%') and lower(s."name") like lower('%${queryParams.size}%')`;
+      link += `category=${queryParams.category}&size=${queryParams.size}&`;
+    }
+    if (
+      !queryParams.search &&
+      !queryParams.category &&
+      queryParams.brand &&
+      queryParams.color &&
+      queryParams.size
+    ) {
+      query += ` where lower(b."name") like lower('%${queryParams.brand}%') and lower(c.color) like lower('%${queryParams.color}%') and lower(s."name") like lower('%${queryParams.size}%')`;
+      link += `brand=${queryParams.brand}&color=${queryParams.color}&size=${queryParams.size}&`;
+    }
+    if (
+      !queryParams.search &&
+      !queryParams.category &&
+      queryParams.brand &&
+      queryParams.color &&
+      !queryParams.size
+    ) {
+      query += ` where lower(b."name") like lower('%${queryParams.brand}%') and lower(c.color) like lower('%${queryParams.color}%')`;
+      link += `brand=${queryParams.brand}&color=${queryParams.color}&`;
+    }
+    if (
+      !queryParams.search &&
+      !queryParams.category &&
+      queryParams.brand &&
+      !queryParams.color &&
+      queryParams.size
+    ) {
+      query += ` where lower(b."name") like lower('%${queryParams.brand}%') and lower(s."name") like lower('%${queryParams.size}%')`;
+      link += `brand=${queryParams.brand}&size=${queryParams.size}&`;
+    }
+    if (
+      !queryParams.search &&
+      !queryParams.category &&
+      queryParams.brand &&
+      !queryParams.color &&
+      !queryParams.size
+    ) {
+      query += ` where lower(b."name") like lower('%${queryParams.brand}%')`;
+      link += `brand=${queryParams.brand}&`;
+    }
+    if (
+      !queryParams.search &&
+      !queryParams.category &&
+      !queryParams.brand &&
+      queryParams.color &&
+      queryParams.size
+    ) {
+      query += ` where lower(c.color) like lower('%${queryParams.color}%') and lower(s."name") like lower('%${queryParams.size}%')`;
+      link += `color=${queryParams.color}&size=${queryParams.size}&`;
+    }
+    if (
+      !queryParams.search &&
+      !queryParams.category &&
+      !queryParams.brand &&
+      queryParams.color &&
+      !queryParams.size
+    ) {
+      query += ` where lower(c.color) like lower('%${queryParams.color}%')`;
+      link += `color=${queryParams.color}&`;
+    }
+    if (
+      !queryParams.search &&
+      !queryParams.category &&
+      !queryParams.brand &&
+      !queryParams.color &&
+      queryParams.size
+    ) {
+      query += ` where lower(s."name") like lower('%${queryParams.size}%')`;
+      link += `size=${queryParams.size}&`;
+    }
+    if (queryParams.startPrice && queryParams.toPrice) {
+      query += ` where p.price between ${queryParams.startPrice} and ${queryParams.toPrice}`;
+      link += `startPrice=${queryParams.startPrice}&toPrice=${queryParams.toPrice}&`;
+      if (
+        queryParams.search ||
+        queryParams.category ||
+        queryParams.brand ||
+        queryParams.color ||
+        queryParams.size
+      ) {
+        console.log("first");
+        query += ` and p.price between ${queryParams.startPrice} and ${queryParams.toPrice}`;
+        link += `startPrice=${queryParams.startPrice}&toPrice=${queryParams.toPrice}&`;
+      }
     }
     console.log(query);
     db.query(query, (err, res) => {

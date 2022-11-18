@@ -109,7 +109,7 @@ const login = (body) => {
             .then((token) => {
               const sendRespon = {
                 token: token,
-                email: payload.email,
+                emailOrusername: payload.emailOrusername,
                 id: response.rows[0].id,
                 role: response.rows[0].role,
               };
