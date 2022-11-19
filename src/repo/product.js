@@ -487,6 +487,37 @@ const getProducts = (queryParams, hostApi) => {
     );
   });
 };
+const getProductsId = (params) => {
+  return new Promise((resolve, reject) => {
+    let query = `select p.id, p."name" ,p.price, p.description, s."name" as size, c.color, i.image, s2.stock, c2."name" as category, b."name" as brand from product_size_color_image psci left join product p on psci.product_id = p.id join size s on psci.size_id = s.id join color c on psci.color_id = c.id join image i on psci.image_id = i.product_id join stock s2 on psci.stock_id = s2.product_id join category c2 on psci.category_id = c2.id join brand b on psci.brand_id = b.id where psci.product_id = $1`;
+    let queryRelated = `select p.id, p."name" ,p.price, p.description, s."name" as size, c.color, i.image, s2.stock, c2."name" as category, b."name" as brand from product_size_color_image psci left join product p on psci.product_id = p.id join size s on psci.size_id = s.id join color c on psci.color_id = c.id join image i on psci.image_id = i.product_id join stock s2 on psci.stock_id = s2.product_id join category c2 on psci.category_id = c2.id join brand b on psci.brand_id = b.id where lower(b."name") like lower($1) and lower(c2."name") like lower($2)`;
+    db.query(query, [params.id], (err, res) => {
+      if (err) {
+        console.log(err.message);
+        resolve(systemError());
+      }
+      const productDetail = res.rows;
+      if (productDetail.length === 0) return resolve(notFound());
+      db.query(
+        queryRelated,
+        [productDetail[0].brand, productDetail[0].category],
+        (errs, Result) => {
+          if (err) {
+            console.log(err.message);
+            resolve(systemError());
+          }
+          const productRelaited = Result.rows;
+          if (productRelaited.length === 0) return resolve(notFound());
+          const data = {
+            product: productDetail,
+            relaited: productRelaited,
+          };
+          resolve(success(data));
+        }
+      );
+    });
+  });
+};
 
 // const editProducts = (body, params, file) => {
 //   return new Promise((resolve, reject) => {
@@ -687,6 +718,7 @@ const productsRepo = {
   createProducts,
   getProducts,
   deleteProducts,
+  getProductsId,
 };
 
 module.exports = productsRepo;

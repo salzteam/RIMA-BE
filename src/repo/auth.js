@@ -5,7 +5,7 @@ const db = require("../config/database");
 const client = require("../config/redis");
 const response = require("../helpers/response");
 const jwtr = new JWTR(client);
-const { sendMail } = require("../config/email");
+const { sendVerifMail } = require("../config/email");
 const {
   success,
   systemError,
@@ -18,7 +18,7 @@ const {
 
 const register = (body) => {
   return new Promise((resolve, reject) => {
-    const { email, password, role } = body;
+    const { email, password, role, code, username } = body;
     const validasiEmail = `select email from users where email like $1`;
     db.query(validasiEmail, [email], (err, resEmail) => {
       if (err) {
@@ -28,45 +28,81 @@ const register = (body) => {
       if (resEmail.rows.length > 0) {
         return resolve(emailreadyexsits());
       }
-      bcrypt.hash(password, 10, (err, hashedPassword) => {
-        if (err) {
-          console.log(err);
-          return resolve(systemError());
+      if (email && !password && !role && !code && !username) {
+        const digits = "0123456789";
+        let OTP = "";
+        for (let i = 0; i < 6; i++) {
+          OTP += digits[Math.floor(Math.random() * 10)];
         }
-        const query =
-          "INSERT INTO users (email, password, role) VALUES ($1, $2, $3) RETURNING id";
-        const values = [email, hashedPassword, role];
-        db.query(query, values, (err, result) => {
-          if (err) {
-            console.log(err);
-            return resolve(systemError());
-          }
-          db.query(
-            "INSERT INTO userinfo (user_id, name ,phone, gender, address) VALUES ($1,$2,$3,$4,$5)",
-            [result.rows[0].id, null, null, null, null],
-            (err, response) => {
+        sendVerifMail({
+          to: email,
+          OTP: OTP,
+          name: email,
+        }).then((result) => {
+          client.get(OTP).then((results) => {
+            if (results) return resolve(custMsg("Code already send to email!"));
+            client
+              .set(OTP, email, {
+                EX: 120,
+                NX: true,
+              })
+              .then(() => {
+                const data = {
+                  message: "Link OTP send to email",
+                  code: OTP,
+                };
+                return resolve(success(data));
+              });
+          });
+          // });
+        });
+      }
+      if (email && password && role && code && username) {
+        client.get(code).then((results) => {
+          if (!results || results !== email)
+            return resolve(custMsg("Code OTP Wrong!"));
+          bcrypt.hash(password, 10, (err, hashedPassword) => {
+            if (err) {
+              console.log(err);
+              return resolve(systemError());
+            }
+            const query =
+              "INSERT INTO users (email, password, role) VALUES ($1, $2, $3) RETURNING id";
+            const values = [email, hashedPassword, role];
+            db.query(query, values, (err, result) => {
               if (err) {
                 console.log(err);
-                db.query(
-                  "delete from user where id = $1",
-                  [result.rows[0].id],
-                  (err, res) => {
-                    if (err) console.log(err);
-                  }
-                );
                 return resolve(systemError());
               }
-              return resolve(
-                created({
-                  ...result.rows[0],
-                  email: body.email,
-                  role: body.role,
-                })
+              db.query(
+                "INSERT INTO userinfo (user_id, name ,phone, gender, address) VALUES ($1,$2,$3,$4,$5)",
+                [result.rows[0].id, username, null, null, null],
+                (err, response) => {
+                  if (err) {
+                    console.log(err);
+                    db.query(
+                      "delete from user where id = $1",
+                      [result.rows[0].id],
+                      (err, res) => {
+                        if (err) console.log(err);
+                      }
+                    );
+                    return resolve(systemError());
+                  }
+                  return resolve(
+                    created({
+                      ...result.rows[0],
+                      email: body.email,
+                      role: body.role,
+                      username: body.username,
+                    })
+                  );
+                }
               );
-            }
-          );
+            });
+          });
         });
-      });
+      }
     });
   });
 };
@@ -151,12 +187,11 @@ const reset = (body) => {
           }
           //   console.log(resEmail.rows[0].name);
           const sendName = resEmail.rows[0].name || null;
-          sendMail({
+          sendMails({
             to: email,
             OTP: OTP,
             name: sendName,
           }).then((result) => {
-            console.log(result);
             client.get(OTP).then((results) => {
               if (results)
                 return resolve(custMsg("Code already send to email!"));

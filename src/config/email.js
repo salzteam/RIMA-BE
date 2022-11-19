@@ -15,7 +15,7 @@ const MAIL_SETTINGS = {
 const nodemailer = require("nodemailer");
 const transporter = nodemailer.createTransport(MAIL_SETTINGS);
 
-module.exports.sendMail = async (params) => {
+module.exports.sendMails = async (params) => {
   try {
     let info = await transporter.sendMail({
       from: MAIL_SETTINGS.auth.user,
@@ -29,6 +29,30 @@ module.exports.sendMail = async (params) => {
           <h2>Hi ${params.name}.</h2>
           <h4>This Is Your Code Verification</h4>
           <p style="margin-bottom: 30px;">Please enter the OTP on input to reset your password</p>
+          <h1 style="font-size: 40px; letter-spacing: 2px; text-align:center;">${params.OTP}</h1>
+     </div>
+      `,
+    });
+    return;
+  } catch (error) {
+    console.log(error);
+    return false;
+  }
+};
+module.exports.sendVerifMail = async (params) => {
+  try {
+    let info = await transporter.sendMail({
+      from: MAIL_SETTINGS.auth.user,
+      to: params.to,
+      subject: "Verification Your Email",
+      html: `
+        <div
+          class="container"
+          style="max-width: 90%; margin: auto; padding-top: 20px"
+        >
+          <h2>Hi.</h2>
+          <h4>This Is Your Code Verification</h4>
+          <p style="margin-bottom: 30px;">Please enter the OTP on input to verif your email</p>
           <h1 style="font-size: 40px; letter-spacing: 2px; text-align:center;">${params.OTP}</h1>
      </div>
       `,

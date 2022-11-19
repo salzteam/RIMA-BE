@@ -2,7 +2,12 @@ const productsRouter = require("express").Router();
 const validate = require("../middlewares/validate");
 const isLogin = require("../middlewares/isLogin");
 const isAllowed = require("../middlewares/allowedRole");
-const { create, getProducts, drop } = require("../controller/product");
+const {
+  create,
+  getProducts,
+  drop,
+  getProductsbyId,
+} = require("../controller/product");
 const {
   diskUpload,
   memoryUpload,
@@ -56,4 +61,5 @@ productsRouter.post(
 // );
 productsRouter.delete("/delete/:id", isLogin(), validate.params("id"), drop);
 productsRouter.get("/", getProducts);
+productsRouter.get("/:id", getProductsbyId);
 module.exports = productsRouter;

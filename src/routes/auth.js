@@ -10,7 +10,7 @@ const {
 
 authRouter.post(
   "/register",
-  validate.email("email", "password", "role"),
+  validate.email("email", "password", "role", "code", "username"),
   registerUser
 );
 

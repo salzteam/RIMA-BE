@@ -14,6 +14,10 @@ const getProducts = async (req, res) => {
   const result = await productsRepo.getProducts(req.query, hostApi);
   res.status(result.statusCode).send(result);
 };
+const getProductsbyId = async (req, res) => {
+  const result = await productsRepo.getProductsId(req.params);
+  res.status(result.statusCode).send(result);
+};
 
 // const edit = async (req, res) => {
 //   const result = await productsRepo.editProducts(
@@ -33,6 +37,7 @@ const productsControllers = {
   create,
   getProducts,
   drop,
+  getProductsbyId,
 };
 
 module.exports = productsControllers;
