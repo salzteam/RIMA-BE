@@ -488,9 +488,205 @@ const getProducts = (queryParams, hostApi) => {
   });
 };
 
+// const editProducts = (body, params, file) => {
+//   return new Promise((resolve, reject) => {
+//     const {
+//       name,
+//       price,
+//       stock,
+//       category_id,
+//       brand_id,
+//       size_id,
+//       color_id,
+//       description,
+//     } = body;
+//     let data = {
+//       id: params.id,
+//     };
+//     let statusImage = false;
+//     let statusProduct = false;
+//     let statusPivot = false;
+//     let statusStock = false;
+//     if (file) {
+//       db.query(
+//         `update image set image = ${file} where product_id = $1`,
+//         [params.id],
+//         (err, resultImage) => {
+//           if (err) {
+//             console.log(err.message);
+//             resolve(systemError());
+//           }
+//           db.query(`update product set updated_at = now() where id = $1`, [
+//             params.id,
+//           ])
+//             .then((result) => {
+//               data["image"] = file;
+//               statusImage = true;
+//             })
+//             .catch((err) => {
+//               console.log(err.message);
+//               resolve(systemError());
+//             });
+//         }
+//       );
+//     }
+//     if (body) {
+//       let queryProduct = `update product set `;
+//       let queryPivot = `update product_size_color_image set `;
+//       let queryStock = `update stock set `;
+//       let valuesProduct = [];
+//       let valuesPivot = [];
+//       let valuesStock = [];
+//       let countPivot = 0;
+//       Object.keys(body).forEach((key, idx, array) => {
+//         if (key === "name" || key === "price" || key === "description") {
+//           if (name && price && description) countProduct = 3;
+//           if (
+//             (name && price) ||
+//             (price && description) ||
+//             (name && description)
+//           )
+//             countProduct = 2;
+//           // if (name || price || description) countProduct = 1;
+//           console.log(`CountProduct : ${countProduct}, idx : ${idx + 1}`);
+//           if (idx + 1 !== countProduct) {
+//             queryProduct += `${key} = $${idx + 1},`;
+//             data[key] = body[key];
+//             valuesProduct.push(body[key]);
+//           }
+//           if (idx + 1 === countProduct) {
+//             queryProduct += `${key} = $${idx}, updated_at = now() where id = $${
+//               idx + 1
+//             }`;
+//             valuesProduct.push(body[key], params.id);
+//             data[key] = body[key];
+//           }
+//         }
+//         if (
+//           key === "category_id" ||
+//           key === "brand_id" ||
+//           key === "size_id" ||
+//           key === "color_id"
+//         ) {
+//           if (key === "category_id") countPivot += 1;
+//           if (key === "brand_id") countPivot += 1;
+//           if (key === "size_id") countPivot += 1;
+//           if (key === "color_id") countPivot += 1;
+//           if (idx !== countProduct) {
+//             queryPivot += `${key} = $${idx + 1},`;
+//             data[key] = body[key];
+//             valuesPivot.push(body[key]);
+//           }
+//           if (idx === countProduct) {
+//             queryPivot += `${key} = $${idx} where product_id = $${idx + 1}`;
+//             valuesPivot.push(body[key], params.id);
+//             data[key] = body[key];
+//           }
+//         }
+//         if (key === "stock") {
+//           queryStock += `${key} = $1 where product_id = $2`;
+//           valuesStock.push(body[key], params.id);
+//           data[key] = body[key];
+//         }
+//       });
+//       if (name || price || description) {
+//         db.query(queryProduct, valuesProduct)
+//           .then((result) => {
+//             statusProduct = true;
+//           })
+//           .catch((err) => {
+//             console.log(err);
+//             console.log(queryProduct);
+//             console.log(valuesProduct);
+//             resolve(systemError());
+//           });
+//       }
+//       if (category_id || brand_id || size_id || color_id) {
+//         db.query(queryPivot, valuesPivot)
+//           .then((result) => {
+//             statusPivot = true;
+//           })
+//           .catch((err) => {
+//             console.log(err);
+//             resolve(systemError());
+//           });
+//       }
+//       if (stock) {
+//         db.query(queryStock, valuesStock)
+//           .then((result) => {
+//             statusStock = true;
+//           })
+//           .catch((err) => {
+//             console.log(err);
+//             resolve(systemError());
+//           });
+//       }
+//     }
+//     if (
+//       name &&
+//       price &&
+//       stock &&
+//       category_id &&
+//       brand_id &&
+//       size_id &&
+//       color_id &&
+//       description
+//     ) {
+//       if (statusImage && statusPivot && statusProduct && statusStock)
+//         return resolve(success(data));
+//     }
+//     if (
+//       name ||
+//       price ||
+//       (description &&
+//         !stock &&
+//         !category_id &&
+//         !brand_id &&
+//         !size_id &&
+//         !color_id)
+//     ) {
+//       if (statusProduct) return resolve(success(data));
+//     }
+//   });
+// };
+
+const deleteProducts = (params) => {
+  return new Promise((resolve, reject) => {
+    const query = "delete from product_size_color_image where product_id = $1";
+    db.query(query, [params.id], (err, resultPivot) => {
+      if (err) {
+        console.log(err);
+        return resolve(systemError());
+      }
+      db.query(
+        "delete from image where product_id = $1",
+        [params.id],
+        (err, resultStock) => {
+          if (err) {
+            console.log(err);
+            return resolve(systemError());
+          }
+          db.query(
+            "delete from stock where product_id = $1",
+            [params.id],
+            (err, resultStock) => {
+              if (err) {
+                console.log(err);
+                return resolve(systemError());
+              }
+              resolve(success(`Product ID.${params.id} success deleted.`));
+            }
+          );
+        }
+      );
+    });
+  });
+};
+
 const productsRepo = {
   createProducts,
   getProducts,
+  deleteProducts,
 };
 
 module.exports = productsRepo;

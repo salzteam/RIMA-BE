@@ -15,9 +15,24 @@ const getProducts = async (req, res) => {
   res.status(result.statusCode).send(result);
 };
 
+// const edit = async (req, res) => {
+//   const result = await productsRepo.editProducts(
+//     req.body,
+//     req.params,
+//     req.file
+//   );
+//   res.status(result.statusCode).send(result);
+// };
+
+const drop = async (req, res) => {
+  const result = await productsRepo.deleteProducts(req.params);
+  res.status(result.statusCode).send(result);
+};
+
 const productsControllers = {
   create,
   getProducts,
+  drop,
 };
 
 module.exports = productsControllers;
