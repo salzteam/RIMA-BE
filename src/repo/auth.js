@@ -143,17 +143,18 @@ const reset = (body) => {
             console.log(err.message);
             resolve(systemError());
           }
-          if (resEmail.rows.length == 0) resolve(wrongData());
+          if (resEmail.rows.length == 0) return resolve(wrongData());
           const digits = "0123456789";
           let OTP = "";
           for (let i = 0; i < 6; i++) {
             OTP += digits[Math.floor(Math.random() * 10)];
           }
           //   console.log(resEmail.rows[0].name);
+          const sendName = resEmail.rows[0].name || null;
           sendMail({
             to: email,
             OTP: OTP,
-            name: resEmail.rows[0].name,
+            name: sendName,
           }).then((result) => {
             console.log(result);
             client.get(OTP).then((results) => {
