@@ -116,59 +116,102 @@ const createTransaction = (body, payload) => {
   });
 };
 
-const getTransactionCustomer = (payload) => {
+const getTransactionCustomer = (params, payload) => {
   return new Promise((resolve, reject) => {
-    const query = `select stp.* from shipping_transaction_payment stp left join transaction t on stp.transaction_id = t.id where t.user_id = $1`;
-    const queryProduct = `select tp.* from shipping_transaction_payment stp left join transaction_product tp on stp.transaction_id  = tp.transaction_id join "transaction" t on stp.transaction_id = t.id where user_id = $1`;
+    let query = `select stp.* from shipping_transaction_payment stp left join transaction t on stp.transaction_id = t.id where t.user_id = $1`;
+    let queryProduct = `select tp.* from shipping_transaction_payment stp left join transaction_product tp on stp.transaction_id  = tp.transaction_id join "transaction" t on stp.transaction_id = t.id where user_id = $1`;
     let data = {};
+    if (params.filter) {
+      if (params.filter === "1") {
+        query += ` and stp.status_id = '1'`;
+      }
+      if (params.filter === "2") {
+        query += ` and stp.status_id = '2'`;
+      }
+      if (params.filter === "3") {
+        query += ` and stp.status_id = '3'`;
+      }
+      if (params.filter === "4") {
+        query += ` and stp.status_id = '4'`;
+      }
+      if (params.filter === "5") {
+        query += ` and stp.status_id = '5'`;
+      }
+      if (params.filter === "6") {
+        query += ` and stp.status_id = '6'`;
+      }
+    }
     db.query(query, [payload.user_id], (err, result) => {
       if (err) {
         console.log(err.message);
         resolve(systemError());
       }
-      (data["transaction_id"] = result.rows[0].transaction_id),
-        (data["transaction_product"] = result.rows[0].transaction_product),
-        (data["promo_id"] = result.rows[0].promo_id),
-        (data["subtotal"] = result.rows[0].subtotal),
-        (data["shipping_id"] = result.rows[0].shipping_id),
-        (data["status_id"] = result.rows[0].status_id),
-        (data["payment_id"] = result.rows[0].payment_id),
-        (data["product"] = []),
-        db.query(queryProduct, [payload.user_id], (err, results) => {
-          if (err) {
-            console.log(err.message);
-            resolve(systemError());
-          }
-          data.product.push(results.rows), resolve(success(result.rows));
-        });
+      if (result.rows.length === 0) return resolve(notFound());
+      //   (data["transaction_id"] = result.rows[0].transaction_id),
+      //     (data["transaction_product"] = result.rows[0].transaction_product),
+      //     (data["promo_id"] = result.rows[0].promo_id),
+      //     (data["subtotal"] = result.rows[0].subtotal),
+      //     (data["shipping_id"] = result.rows[0].shipping_id),
+      //     (data["status_id"] = result.rows[0].status_id),
+      //     (data["payment_id"] = result.rows[0].payment_id),
+      //     (data["product"] = []),
+      db.query(queryProduct, [payload.user_id], (err, results) => {
+        if (err) {
+          console.log(err.message);
+          resolve(systemError());
+        }
+        // data.product.push(results.rows),
+        resolve(success(result.rows));
+      });
     });
   });
 };
-const getTransactionSeller = () => {
+const getTransactionSeller = (params) => {
   return new Promise((resolve, reject) => {
     const query = `select stp.* from shipping_transaction_payment stp left join transaction t on stp.transaction_id = t.id`;
     const queryProduct = `select tp.* from shipping_transaction_payment stp left join transaction_product tp on stp.transaction_id  = tp.transaction_id join "transaction" t on stp.transaction_id = t.id`;
     let data = {};
+    if (params.filter) {
+      if (params.filter === "1") {
+        query += ` where stp.status_id = '1'`;
+      }
+      if (params.filter === "2") {
+        query += ` where stp.status_id = '2'`;
+      }
+      if (params.filter === "3") {
+        query += ` where stp.status_id = '3'`;
+      }
+      if (params.filter === "4") {
+        query += ` where stp.status_id = '4'`;
+      }
+      if (params.filter === "5") {
+        query += ` where stp.status_id = '5'`;
+      }
+      if (params.filter === "6") {
+        query += ` where stp.status_id = '6'`;
+      }
+    }
     db.query(query, (err, result) => {
       if (err) {
         console.log(err.message);
         resolve(systemError());
       }
-      (data["transaction_id"] = result.rows[0].transaction_id),
-        (data["transaction_product"] = result.rows[0].transaction_product),
-        (data["promo_id"] = result.rows[0].promo_id),
-        (data["subtotal"] = result.rows[0].subtotal),
-        (data["shipping_id"] = result.rows[0].shipping_id),
-        (data["status_id"] = result.rows[0].status_id),
-        (data["payment_id"] = result.rows[0].payment_id),
-        (data["product"] = []),
-        db.query(queryProduct, (err, results) => {
-          if (err) {
-            console.log(err.message);
-            resolve(systemError());
-          }
-          data.product.push(results.rows), resolve(success(result.rows));
-        });
+      //   (data["transaction_id"] = result.rows[0].transaction_id),
+      //     (data["transaction_product"] = result.rows[0].transaction_product),
+      //     (data["promo_id"] = result.rows[0].promo_id),
+      //     (data["subtotal"] = result.rows[0].subtotal),
+      //     (data["shipping_id"] = result.rows[0].shipping_id),
+      //     (data["status_id"] = result.rows[0].status_id),
+      //     (data["payment_id"] = result.rows[0].payment_id),
+      //     (data["product"] = []),
+      db.query(queryProduct, (err, results) => {
+        if (err) {
+          console.log(err.message);
+          resolve(systemError());
+        }
+        // data.product.push(results.rows),
+        resolve(success(result.rows));
+      });
     });
   });
 };
@@ -177,9 +220,47 @@ updateStatus = (body) => {
   return new Promise((resolve, reject) => {
     const { status_id, transaction_id } = body;
     const transactionQuery =
-      "select shipping_transaction_payment from stock where product_id = $1";
+      "select * from transaction_product where transaction_id = $1";
     const stockQuery = "select stock from stock where product_id = $1";
-    db.query(stockQuery);
+    const updateStatus = `update shipping_transaction_payment set status_id = $1 where transaction_id = $2`;
+    if (status_id === "6") {
+      db.query(transactionQuery, [transaction_id], (err, resultTrans) => {
+        if (err) {
+          console.log(err.message);
+          resolve(systemError());
+        }
+        const productList = resultTrans.rows;
+        productList.map((data) => {
+          db.query(stockQuery, [data.product_id], (err, resultStock) => {
+            if (err) {
+              console.log(err.message);
+              resolve(systemError());
+            }
+            const oldStock = data.qty;
+            const newStock =
+              parseInt(oldStock) + parseInt(resultStock.rows[0].stock);
+            db.query(
+              `update stock set stock = ${newStock} where product_id = ${data.product_id}`,
+              (err, resultUpdateStock) => {
+                if (err) {
+                  console.log(err.message);
+                  resolve(systemError());
+                }
+                db.query(updateStatus, [status_id, transaction_id]);
+                resolve(success());
+              }
+            );
+          });
+        });
+      });
+    }
+    db.query(updateStatus, [status_id, transaction_id], (err, resultUpdt) => {
+      if (err) {
+        console.log(err.message);
+        resolve(systemError());
+      }
+      resolve(success());
+    });
   });
 };
 
@@ -187,6 +268,7 @@ const transactionRepo = {
   createTransaction,
   getTransactionCustomer,
   getTransactionSeller,
+  updateStatus,
 };
 
 module.exports = transactionRepo;

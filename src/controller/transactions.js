@@ -8,17 +8,29 @@ const create = async (req, res) => {
   res.status(result.statusCode).send(result);
 };
 const getCust = async (req, res) => {
-  const result = await transactionRepo.getTransactionCustomer(req.userPayload);
+  console.log(req.query);
+  const result = await transactionRepo.getTransactionCustomer(
+    req.query,
+    req.userPayload
+  );
   res.status(result.statusCode).send(result);
 };
 const getSeller = async (req, res) => {
-  const result = await transactionRepo.getTransactionCustomer(req.userPayload);
+  const result = await transactionRepo.getTransactionCustomer(
+    req.query,
+    req.userPayload
+  );
+  res.status(result.statusCode).send(result);
+};
+const updateStatus = async (req, res) => {
+  const result = await transactionRepo.updateStatus(req.body);
   res.status(result.statusCode).send(result);
 };
 const transactionController = {
   create,
   getCust,
   getSeller,
+  updateStatus,
 };
 
 module.exports = transactionController;
