@@ -18,6 +18,13 @@ const getProductsbyId = async (req, res) => {
   const result = await productsRepo.getProductsId(req.params);
   res.status(result.statusCode).send(result);
 };
+const getProductBySeller = async (req, res) => {
+  const result = await productsRepo.getProductBySeller(
+    req.params,
+    req.userPayload
+  );
+  res.status(result.statusCode).send(result);
+};
 
 // const edit = async (req, res) => {
 //   const result = await productsRepo.editProducts(
@@ -29,7 +36,7 @@ const getProductsbyId = async (req, res) => {
 // };
 
 const drop = async (req, res) => {
-  const result = await productsRepo.deleteProducts(req.params);
+  const result = await productsRepo.deleteProducts(req.params, req.userPayload);
   res.status(result.statusCode).send(result);
 };
 
@@ -38,6 +45,7 @@ const productsControllers = {
   getProducts,
   drop,
   getProductsbyId,
+  getProductBySeller,
 };
 
 module.exports = productsControllers;

@@ -7,6 +7,7 @@ const {
   getProducts,
   drop,
   getProductsbyId,
+  getProductBySeller,
 } = require("../controller/product");
 const {
   diskUpload,
@@ -59,7 +60,19 @@ productsRouter.post(
 //   validate.img(),
 //   edit
 // );
-productsRouter.delete("/delete/:id", isLogin(), validate.params("id"), drop);
+productsRouter.delete(
+  "/delete/:id",
+  isLogin(),
+  isAllowed("seller"),
+  validate.params("id"),
+  drop
+);
 productsRouter.get("/", getProducts);
+productsRouter.get(
+  "/my-product",
+  isLogin(),
+  isAllowed("seller"),
+  getProductBySeller
+);
 productsRouter.get("/:id", getProductsbyId);
 module.exports = productsRouter;

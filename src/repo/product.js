@@ -5,6 +5,7 @@ const {
   systemError,
   created,
   invalidParameter,
+  custMsg,
 } = require("../helpers/templateResponse");
 const db = require("../config/database");
 
@@ -107,7 +108,7 @@ const createProducts = (body, file, user) => {
 const getProducts = (queryParams, hostApi) => {
   return new Promise((resolve, reject) => {
     let link = `${hostApi}/api/v1/product?`;
-    let query = `select p.id, ui."name" as seller_name, ui.user_id as seller_id  ,p."name" ,p.price, p.description, s."name" as size, c.color, i.image, s2.stock, c2."name" as category, b."name" as brand from product_size_color_image psci left join product p on psci.product_id = p.id join size s on psci.size_id = s.id join color c on psci.color_id = c.id join image i on psci.image_id = i.product_id join stock s2 on psci.stock_id = s2.product_id join category c2 on psci.category_id = c2.id join brand b on psci.brand_id = b.id join userinfo ui on p.users_id = ui.user_id`;
+    let query = `select p.id, ui."name" as seller_name, ui.user_id as seller_id  ,p."name" ,p.price, p.description, s."name" as size, c.color, i.image, s2.stock, c2."name" as category, b."name" as brand, COALESCE(COUNT(tp.product_id),0) as sold from product_size_color_image psci left join product p on psci.product_id = p.id join size s on psci.size_id = s.id join color c on psci.color_id = c.id join image i on psci.image_id = i.product_id join stock s2 on psci.stock_id = s2.product_id join category c2 on psci.category_id = c2.id join brand b on psci.brand_id = b.id join userinfo ui on p.users_id = ui.user_id join transaction_product tp on p.id = tp.product_id group by p.id, ui."name", ui.user_id,p."name" ,p.price, p.description, s."name", c.color, i.image, s2.stock, c2."name", b."name"`;
     if (
       queryParams.search &&
       !queryParams.category &&
@@ -489,7 +490,7 @@ const getProducts = (queryParams, hostApi) => {
 };
 const getProductsId = (params) => {
   return new Promise((resolve, reject) => {
-    let query = `select p.id, ui."name" as seller_name , ui.user_id as seller_id ,p."name" ,p.price, p.description, s."name" as size, c.color, i.image, s2.stock, c2."name" as category, b."name" as brand from product_size_color_image psci left join product p on psci.product_id = p.id join size s on psci.size_id = s.id join color c on psci.color_id = c.id join image i on psci.image_id = i.product_id join stock s2 on psci.stock_id = s2.product_id join category c2 on psci.category_id = c2.id join brand b on psci.brand_id = b.id join userinfo ui on p.users_id = ui.user_id`;
+    let query = `select p.id, ui."name" as seller_name, ui.user_id as seller_id  ,p."name" ,p.price, p.description, s."name" as size, c.color, i.image, s2.stock, c2."name" as category, b."name" as brand, COALESCE(COUNT(tp.product_id),0) as sold from product_size_color_image psci left join product p on psci.product_id = p.id join size s on psci.size_id = s.id join color c on psci.color_id = c.id join image i on psci.image_id = i.product_id join stock s2 on psci.stock_id = s2.product_id join category c2 on psci.category_id = c2.id join brand b on psci.brand_id = b.id join userinfo ui on p.users_id = ui.user_id join transaction_product tp on p.id = tp.product_id group by p.id, ui."name", ui.user_id,p."name" ,p.price, p.description, s."name", c.color, i.image, s2.stock, c2."name", b."name" where p.id = $1`;
     let queryRelated = `select ui."name" as seller_name , ui.user_id as seller_id ,p.id, p."name" ,p.price, p.description, s."name" as size, c.color, i.image, s2.stock, c2."name" as category, b."name" as brand from product_size_color_image psci left join product p on psci.product_id = p.id join size s on psci.size_id = s.id join color c on psci.color_id = c.id join image i on psci.image_id = i.product_id join stock s2 on psci.stock_id = s2.product_id join category c2 on psci.category_id = c2.id join brand b on psci.brand_id = b.id join userinfo ui on p.users_id = ui.user_id where lower(b."name") like lower($1) and lower(c2."name") like lower($2)`;
     db.query(query, [params.id], (err, res) => {
       if (err) {
@@ -681,35 +682,63 @@ const getProductsId = (params) => {
 //   });
 // };
 
-const deleteProducts = (params) => {
+const deleteProducts = (params, payload) => {
   return new Promise((resolve, reject) => {
     const query = "delete from product_size_color_image where product_id = $1";
-    db.query(query, [params.id], (err, resultPivot) => {
-      if (err) {
-        console.log(err);
-        return resolve(systemError());
-      }
-      db.query(
-        "delete from image where product_id = $1",
-        [params.id],
-        (err, resultStock) => {
+    db.query(
+      `select * from product where id = ${params.id}`,
+      (err, resultGet) => {
+        if (err) {
+          console.log(err.message);
+          resolve(systemError);
+        }
+        if (resultGet.rows[0].user_id !== payload.user_id)
+          return reslove(custMsg("Only Owner This Product Can Delete"));
+        db.query(query, [params.id], (err, resultPivot) => {
           if (err) {
             console.log(err);
             return resolve(systemError());
           }
           db.query(
-            "delete from stock where product_id = $1",
+            "delete from image where product_id = $1",
             [params.id],
             (err, resultStock) => {
               if (err) {
                 console.log(err);
                 return resolve(systemError());
               }
-              resolve(success(`Product ID.${params.id} success deleted.`));
+              db.query(
+                "delete from stock where product_id = $1",
+                [params.id],
+                (err, resultStock) => {
+                  if (err) {
+                    console.log(err);
+                    return resolve(systemError());
+                  }
+                  resolve(success(`Product ID.${params.id} success deleted.`));
+                }
+              );
             }
           );
-        }
-      );
+        });
+      }
+    );
+  });
+};
+
+const getProductBySeller = (params, payload) => {
+  return new Promise((resolve, reject) => {
+    let queryGet = `select p.* from product p left join stock s on p.id = s.product_id where p.id = ${params.id}`;
+    if (params) {
+      if (params.filter === "soldout") queryGet += ` and s.stock = '0'`;
+    }
+    db.query(queryGet, (err, resultGet) => {
+      if (err) {
+        console.log(err.message);
+        resolve(systemError);
+      }
+      if (resultGet.rows[0].user_id !== payload.user_id)
+        return reslove(custMsg("Only Owner This Product Can Delete"));
     });
   });
 };
@@ -719,6 +748,7 @@ const productsRepo = {
   getProducts,
   deleteProducts,
   getProductsId,
+  getProductBySeller,
 };
 
 module.exports = productsRepo;
