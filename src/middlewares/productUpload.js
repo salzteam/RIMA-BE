@@ -23,10 +23,7 @@ const uploader = async (req, res, next) => {
           datauri.content,
           cloudinaryOpt
         );
-        const data = {
-          image: rest.url,
-        };
-        req.file.push(data);
+        req.file.push(rest.url);
         count += 1;
         console.log(count);
         if (count === files.length) next();
