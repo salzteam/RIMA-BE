@@ -111,9 +111,9 @@ const login = (body) => {
   return new Promise((resolve, reject) => {
     const { emailOrusername, password, isEmail } = body;
     let getPasswordByEmailQuery =
-      "SELECT id, password, role FROM users WHERE email = $1";
+      "SELECT u.id, u.password, u.role, ui.name FROM users u left join userinfo ui on u.id = ui.user_id WHERE email = $1";
     if (!isEmail)
-      getPasswordByEmailQuery = `SELECT us.id, us.password, us.role FROM users us left join userinfo u on us.id = u.user_id WHERE u.name = $1`;
+      getPasswordByEmailQuery = `SELECT us.id, us.password, us.role, u.name FROM users us left join userinfo u on us.id = u.user_id WHERE u.name = $1`;
     const getPasswordByEmailValues = [emailOrusername];
     db.query(
       getPasswordByEmailQuery,
@@ -143,8 +143,10 @@ const login = (body) => {
               issuer: process.env.ISSUER,
             })
             .then((token) => {
+              console.log(payload);
               const sendRespon = {
                 token: token,
+                name: payload.name,
                 emailOrusername: payload.emailOrusername,
                 id: response.rows[0].id,
                 role: response.rows[0].role,

@@ -1,6 +1,4 @@
-const express = require("express");
-
-const promoRouter = express.Router();
+const promoRouter = require("express").Router();
 const validate = require("../middlewares/validate");
 const isLogin = require("../middlewares/isLogin");
 // const isAllowed = require("../middlewares/allowedRole");
