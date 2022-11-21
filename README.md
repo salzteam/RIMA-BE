@@ -24,6 +24,8 @@ Rima Furniture one-stop solution for buying furniture.
 - [How to run](#𓆙-How-to-run)
 - [Route](#𓆙-Documentation-Postman)
 - [Documentation Postman](#𓆙-Documentation-Postman)
+- [Related Project](#𓆙-Related-Project)
+- [Contributor](#𓆙-Contributors)
 
 ## 𓆙 Requirement
 
@@ -103,7 +105,7 @@ Click here [POSTMAN](https://documenter.getpostman.com/view/23707233/2s8YmNP2aL)
 - [FRONT-END](https://github.com/rzkiyprtm/rima-project)
 - [BACK-END](https://github.com/salzteam/RIMA-BE)
 
-## 𓆙 Contributors
+## 𓆙 Contributor
 <center>
   <table>
     <tr>
