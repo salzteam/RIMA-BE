@@ -111,7 +111,7 @@ Click here [POSTMAN](https://documenter.getpostman.com/view/23707233/2s8YmNP2aL)
     <tr>
       <td>
         <a href="https://github.com/salzteam">
-          <img width="100" src="https://media.discordapp.net/attachments/1042328276623966313/1044211472001138799/A5EA7BEF-0326-4ED0-A439-A64A680A774B.jpg?width=500&height=500" alt=""><br/>
+          <img width="100" src="https://media.discordapp.net/attachments/1042328276623966313/1044211472001138799/A5EA7BEF-0326-4ED0-A439-A64A680A774B.jpg?width=500&height=1000" alt=""><br/>
           <sub><b>Akshal Rizki Gandari</b></sub>
         </a>
         </td>
