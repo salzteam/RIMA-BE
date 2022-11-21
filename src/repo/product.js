@@ -701,8 +701,8 @@ const deleteProducts = (params, payload) => {
           console.log(err.message);
           resolve(systemError);
         }
-        if (resultGet.rows[0].user_id !== payload.user_id)
-          return reslove(custMsg("Only Owner This Product Can Delete"));
+        if (resultGet.rows[0].users_id !== payload.user_id)
+          return resolve(custMsg("Only Owner This Product Can Delete"));
         db.query(query, [params.id], (err, resultPivot) => {
           if (err) {
             console.log(err);
