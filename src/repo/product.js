@@ -412,7 +412,7 @@ const getProducts = (queryParams, hostApi) => {
         link += `startPrice=${queryParams.startPrice}&toPrice=${queryParams.toPrice}&`;
       }
     }
-    query += `group by p.id, ui."name", ui.user_id,p."name" ,p.price, p.description, s."name", c.color, s2.stock, c2."name", b."name"`;
+    query += ` group by p.id, ui."name", ui.user_id,p."name" ,p.price, p.description, s."name", c.color, s2.stock, c2."name", b."name"`;
     if (queryParams.price == "expensive") {
       query += ` order by p.price desc`;
       link += `price=${queryParams.price}&`;
