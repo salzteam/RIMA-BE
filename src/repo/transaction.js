@@ -166,29 +166,29 @@ const getTransactionCustomer = (params, payload) => {
     });
   });
 };
-const getTransactionSeller = (params) => {
+const getTransactionSeller = (params, userPayload) => {
   return new Promise((resolve, reject) => {
-    const query = `select stp.* from shipping_transaction_payment stp left join transaction t on stp.transaction_id = t.id`;
+    const query = `select stp.* from shipping_transaction_payment stp left join transaction t on stp.transaction_id = t.id join transaction_product tp on stp.transaction_id = tp.transaction_id where tp.seller_id = ${userPayload.user_id}`;
     const queryProduct = `select tp.* from shipping_transaction_payment stp left join transaction_product tp on stp.transaction_id  = tp.transaction_id join "transaction" t on stp.transaction_id = t.id`;
     let data = {};
     if (params.filter) {
       if (params.filter === "1") {
-        query += ` where stp.status_id = '1'`;
+        query += ` and stp.status_id = '1'`;
       }
       if (params.filter === "2") {
-        query += ` where stp.status_id = '2'`;
+        query += ` and stp.status_id = '2'`;
       }
       if (params.filter === "3") {
-        query += ` where stp.status_id = '3'`;
+        query += ` and stp.status_id = '3'`;
       }
       if (params.filter === "4") {
-        query += ` where stp.status_id = '4'`;
+        query += ` and stp.status_id = '4'`;
       }
       if (params.filter === "5") {
-        query += ` where stp.status_id = '5'`;
+        query += ` and stp.status_id = '5'`;
       }
       if (params.filter === "6") {
-        query += ` where stp.status_id = '6'`;
+        query += ` and stp.status_id = '6'`;
       }
     }
     db.query(query, (err, result) => {

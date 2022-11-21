@@ -8,9 +8,14 @@ const {
   getCust,
   updateStatus,
 } = require("../controller/transactions");
-transactionRouter.post("/create", isLogin(), isAllowed("seller"), create);
+transactionRouter.post("/create", isLogin(), isAllowed("customer"), create);
 transactionRouter.get("/", isLogin(), isAllowed("customer"), getCust);
-transactionRouter.get("/seller", isLogin(), isAllowed("seller"), getSeller);
+transactionRouter.get(
+  "/history-seller",
+  isLogin(),
+  isAllowed("seller"),
+  getSeller
+);
 transactionRouter.patch(
   "/update-status",
   isLogin(),

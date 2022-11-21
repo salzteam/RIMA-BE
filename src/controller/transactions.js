@@ -16,7 +16,7 @@ const getCust = async (req, res) => {
   res.status(result.statusCode).send(result);
 };
 const getSeller = async (req, res) => {
-  const result = await transactionRepo.getTransactionCustomer(
+  const result = await transactionRepo.getTransactionSeller(
     req.query,
     req.userPayload
   );
