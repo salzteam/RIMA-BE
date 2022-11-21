@@ -9,7 +9,20 @@ const {
   updateStatus,
   getByStatus,
 } = require("../controller/transactions");
-transactionRouter.post("/create", isLogin(), isAllowed("customer"), create);
+transactionRouter.post(
+  "/create",
+  isLogin(),
+  isAllowed("customer"),
+  validate.body(
+    "product_id",
+    "promo_id",
+    "shipping_id",
+    "payment_id",
+    "qty",
+    "subtotal"
+  ),
+  create
+);
 transactionRouter.get("/", isLogin(), isAllowed("customer"), getCust);
 transactionRouter.get(
   "/history-seller",
