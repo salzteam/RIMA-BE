@@ -6,7 +6,6 @@ const {
   created,
 } = require("../helpers/templateResponse");
 const db = require("../config/database");
-const { resolve } = require("path");
 
 const createTransaction = (body, payload) => {
   return new Promise(async (resolve, reject) => {
