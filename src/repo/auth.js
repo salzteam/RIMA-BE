@@ -18,8 +18,9 @@ const {
 
 const register = (body) => {
   return new Promise((resolve, reject) => {
-    const { email, password, role, code, username } = body;
+    const { email, password, role, code, username, storedesc } = body;
     const validasiEmail = `select email from users where email like $1`;
+    const store = storedesc || null;
     db.query(validasiEmail, [email], (err, resEmail) => {
       if (err) {
         console.log(err);
@@ -75,8 +76,8 @@ const register = (body) => {
                 return resolve(systemError());
               }
               db.query(
-                "INSERT INTO userinfo (user_id, name ,phone, gender, address) VALUES ($1,$2,$3,$4,$5)",
-                [result.rows[0].id, username, null, null, null],
+                "INSERT INTO userinfo (user_id, name ,phone, gender, address, store_desc) VALUES ($1,$2,$3,$4,$5,$6)",
+                [result.rows[0].id, username, null, null, null, store],
                 (err, response) => {
                   if (err) {
                     console.log(err);
