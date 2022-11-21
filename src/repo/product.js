@@ -50,7 +50,6 @@ const createProducts = (body, file, user) => {
             const productID = res.rows[0].id;
             let inputImage =
               "insert into image (product_id, image) values ($1,$2)";
-            console.log(file);
             file.forEach((elemen, indext) => {
               client.query(inputImage, [productID, elemen], (err, resImage) => {
                 if (shouldAbort(err)) return;
@@ -490,9 +489,9 @@ const getProducts = (queryParams, hostApi) => {
 };
 const getProductsId = (params) => {
   return new Promise((resolve, reject) => {
-    let query = `select p.id, ui."name" as seller_name, ui.user_id as seller_id  ,p."name" ,p.price, p.description, s."name" as size, c.color, s2.stock, c2."name" as category, b."name" as brand, (select i.image from image i where product_id = p.id limit 1) as image, COALESCE(COUNT(tp.product_id),0) as sold from product_size_color_image psci left join product p on psci.product_id = p.id join size s on psci.size_id = s.id join color c on psci.color_id = c.id join image i on psci.image_id = i.product_id join stock s2 on psci.stock_id = s2.product_id join category c2 on psci.category_id = c2.id join brand b on psci.brand_id = b.id join userinfo ui on p.users_id = ui.user_id full outer join transaction_product tp on p.id = tp.product_id where p.id = $1 group by p.id, ui."name", ui.user_id,p."name" ,p.price, p.description, s."name", c.color, i.image, s2.stock, c2."name", b."name"`;
-    let queryRelated = `select ui."name" as seller_name , ui.user_id as seller_id ,p.id, p."name" ,p.price, p.description, s."name" as size, c.color, i.image, s2.stock, c2."name" as category, b."name" as brand from product_size_color_image psci left join product p on psci.product_id = p.id join size s on psci.size_id = s.id join color c on psci.color_id = c.id join image i on psci.image_id = i.product_id join stock s2 on psci.stock_id = s2.product_id join category c2 on psci.category_id = c2.id join brand b on psci.brand_id = b.id join userinfo ui on p.users_id = ui.user_id where lower(b."name") like lower($1) and lower(c2."name") like lower($2)`;
-    console.log(query);
+    let query = `select p.id, ui."name" as seller_name, ui.user_id as seller_id ,p."name" ,p.price, p.description, s."name" as size, c.color, s2.stock, c2."name" as category, b."name" as brand, COALESCE(COUNT(tp.product_id),0) as sold from product_size_color_image psci left join product p on psci.product_id = p.id join size s on psci.size_id = s.id join color c on psci.color_id = c.id join image i on psci.image_id = i.product_id join stock s2 on psci.stock_id = s2.product_id join category c2 on psci.category_id = c2.id join brand b on psci.brand_id = b.id join userinfo ui on p.users_id = ui.user_id full outer join transaction_product tp on p.id = tp.product_id where p.id = $1 group by p.id, ui."name", ui.user_id,p."name" ,p.price, p.description, s."name", c.color, s2.stock, c2."name", b."name"`;
+    let queryImage = `select i.image from image i left join product p on i.product_id = p.id where p.id = $1`;
+    let queryRelated = `select p.id, ui."name" as seller_name, ui.user_id as seller_id  ,p."name" ,p.price, p.description, s."name" as size, c.color, (select i.image from image i where product_id = p.id limit 1) as image, s2.stock, c2."name" as category, b."name" as brand, COALESCE(COUNT(tp.product_id),0) as sold from product_size_color_image psci left join product p on psci.product_id = p.id join size s on psci.size_id = s.id join color c on psci.color_id = c.id join image i on psci.image_id = i.product_id join stock s2 on psci.stock_id = s2.product_id join category c2 on psci.category_id = c2.id join brand b on psci.brand_id = b.id join userinfo ui on p.users_id = ui.user_id full outer join transaction_product tp on p.id = tp.product_id  where lower(b."name") like lower($1) and lower(c2."name") like lower($2) group by p.id, ui."name", ui.user_id,p."name" ,p.price, p.description, s."name", c.color, s2.stock, c2."name", b."name"`;
     db.query(query, [params.id], (err, res) => {
       if (err) {
         console.log(err.message);
@@ -500,23 +499,31 @@ const getProductsId = (params) => {
       }
       const productDetail = res.rows;
       if (productDetail.length === 0) return resolve(notFound());
-      db.query(
-        queryRelated,
-        [productDetail[0].brand, productDetail[0].category],
-        (errs, Result) => {
-          if (err) {
-            console.log(err.message);
-            resolve(systemError());
-          }
-          const productRelaited = Result.rows;
-          if (productRelaited.length === 0) return resolve(notFound());
-          const data = {
-            product: productDetail,
-            relaited: productRelaited,
-          };
-          resolve(success(data));
+      db.query(queryImage, [params.id], (err, results) => {
+        if (err) {
+          console.log(err.message);
+          resolve(systemError());
         }
-      );
+        const productImage = results.rows;
+        db.query(
+          queryRelated,
+          [productDetail[0].brand, productDetail[0].category],
+          (errs, Result) => {
+            if (err) {
+              console.log(err.message);
+              resolve(systemError());
+            }
+            const productRelaited = Result.rows;
+            if (productRelaited.length === 0) return resolve(notFound());
+            const data = {
+              product: productDetail,
+              image: productImage,
+              relaited: productRelaited,
+            };
+            resolve(success(data));
+          }
+        );
+      });
     });
   });
 };
@@ -729,7 +736,7 @@ const deleteProducts = (params, payload) => {
 
 const getProductBySeller = (params, payload) => {
   return new Promise((resolve, reject) => {
-    let queryGet = `select p.* from product p left join stock s on p.id = s.product_id where p.id = ${params.id}`;
+    let queryGet = `select p.*, (select i.image from image i where product_id = p.id limit 1) as image, s2.stock from product p left join userinfo u on p.users_id = u.user_id join stock s on p.id = s.product_id join product_size_color_image psci on p.id = psci.product_id join stock s2 on psci.stock_id = s2.product_id where u.user_id = ${payload.user_id} group by p.id, s2.stock`;
     if (params) {
       if (params.filter === "soldout") queryGet += ` and s.stock = '0'`;
     }
@@ -738,8 +745,7 @@ const getProductBySeller = (params, payload) => {
         console.log(err.message);
         resolve(systemError);
       }
-      if (resultGet.rows[0].user_id !== payload.user_id)
-        return reslove(custMsg("Only Owner This Product Can Delete"));
+      resolve(success(resultGet.rows));
     });
   });
 };
