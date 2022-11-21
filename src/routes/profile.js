@@ -13,7 +13,7 @@ const { editProfile, getProfile, editPwd } = require("../controller/profile");
 profileRouter.patch(
   "/edit",
   isLogin(),
-  validate.body("name", "phone", "gender", "address"),
+  validate.body("name", "phone", "gender", "address", "store_desc"),
   (req, res, next) =>
     memoryUpload.single("image")(req, res, (err) => {
       errorHandler(err, res, next);

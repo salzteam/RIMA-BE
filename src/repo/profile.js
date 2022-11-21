@@ -14,7 +14,7 @@ const db = require("../config/database");
 
 const editPorfile = (body, token, file) => {
   return new Promise((resolve, reject) => {
-    const { name, phone, gender, address } = body;
+    const { name, phone, gender, address, store_desc } = body;
     let query = "update userinfo set ";
     const values = [];
     const userId = token.user_id;
@@ -22,7 +22,7 @@ const editPorfile = (body, token, file) => {
     let data = {};
     if (file) {
       imageProduct = file.url;
-      if (!name && !phone && !address && !gender) {
+      if (!name && !phone && !address && !gender && !store_desc) {
         if (file && file.resource_type == "image") {
           query += `image = '${imageProduct}',updated_at = now() where user_id = $1`;
           values.push(userId);

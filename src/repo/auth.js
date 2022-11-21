@@ -5,7 +5,7 @@ const db = require("../config/database");
 const client = require("../config/redis");
 const response = require("../helpers/response");
 const jwtr = new JWTR(client);
-const { sendVerifMail } = require("../config/email");
+const { sendVerifMail, sendMails } = require("../config/email");
 const {
   success,
   systemError,
