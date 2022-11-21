@@ -22,6 +22,13 @@ const getSeller = async (req, res) => {
   );
   res.status(result.statusCode).send(result);
 };
+const getByStatus = async (req, res) => {
+  const result = await transactionRepo.getTransactionByStatus(
+    req.body,
+    req.userPayload
+  );
+  res.status(result.statusCode).send(result);
+};
 const updateStatus = async (req, res) => {
   const result = await transactionRepo.updateStatus(req.body);
   res.status(result.statusCode).send(result);
@@ -31,6 +38,7 @@ const transactionController = {
   getCust,
   getSeller,
   updateStatus,
+  getByStatus,
 };
 
 module.exports = transactionController;

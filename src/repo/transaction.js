@@ -165,6 +165,7 @@ const getTransactionCustomer = (params, payload) => {
     });
   });
 };
+
 const getTransactionSeller = (params, userPayload) => {
   return new Promise((resolve, reject) => {
     const query = `select stp.* from shipping_transaction_payment stp left join transaction t on stp.transaction_id = t.id join transaction_product tp on stp.transaction_id = tp.transaction_id where tp.seller_id = ${userPayload.user_id}`;
@@ -215,7 +216,34 @@ const getTransactionSeller = (params, userPayload) => {
   });
 };
 
-updateStatus = (body) => {
+const getTransactionByStatus = (body, payload) => {
+  return new Promise((resolve) => {
+    const { transaction_id } = body;
+    const query = `select stp.transaction_id , stp.status_id, p."name" from shipping_transaction_payment stp left join "transaction" t on stp.transaction_id = t.id join transaction_product tp on stp.transaction_product = tp.transaction_id join product p on tp.product_id = p.id where t.user_id = ${payload.user_id} and tp.transaction_id = ${transaction_id}`;
+    let data = {};
+    let nameProduct = [];
+    db.query(query, (err, result) => {
+      if (err) {
+        console.log(err.message);
+        resolve(systemError());
+      }
+      if (result.rows.length === 0) resolve(notFound());
+      data["transaction_id"] = result.rows[0].transaction_id;
+      data["status_id"] = result.rows[0].status_id;
+      result.rows.map((names) => {
+        nameProduct.push(names.name);
+      });
+      data = {
+        transaction_id: result.rows[0].transaction_id,
+        status_id: result.rows[0].status_id,
+        name_product: nameProduct,
+      };
+      resolve(success(data));
+    });
+  });
+};
+
+const updateStatus = (body) => {
   return new Promise((resolve, reject) => {
     const { status_id, transaction_id } = body;
     const transactionQuery =
@@ -268,6 +296,7 @@ const transactionRepo = {
   getTransactionCustomer,
   getTransactionSeller,
   updateStatus,
+  getTransactionByStatus,
 };
 
 module.exports = transactionRepo;
